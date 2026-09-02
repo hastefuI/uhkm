@@ -1,0 +1,8 @@
+// @name: my-macro
+// @version: 1
+
+action {
+	key A
+	key B
+	delay 100
+}

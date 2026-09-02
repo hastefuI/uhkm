@@ -1,0 +1,12 @@
+uhkm
+dist/
+
+*.test
+coverage.out
+
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db

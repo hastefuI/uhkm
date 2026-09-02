@@ -1,0 +1,6 @@
+// @name: trim-test
+
+action {
+    key A   
+    key B	
+}
