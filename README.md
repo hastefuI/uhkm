@@ -1,4 +1,4 @@
-# uhkm
+# uhkm [![Build](https://github.com/hastefuI/uhkm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hastefuI/uhkm/actions/workflows/ci.yml) [![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)](https://go.dev) [![Release](https://img.shields.io/github/v/release/hastefuI/uhkm)](https://github.com/hastefuI/uhkm/releases) [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/hastefuI/uhkm/blob/main/LICENSE)
 
 A CLI for linting and formatting [Ultimate Hacking Keyboard](https://ultimatehackingkeyboard.com/) Macro (`.uhkm`) files based on the [UHKM specification](https://github.com/hastefuI/uhkm-spec).
 
