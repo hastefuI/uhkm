@@ -1,0 +1,110 @@
+version: 2
+
+project_name: uhkm
+
+builds:
+  - id: uhkm
+    binary: uhkm
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X {{ .Env.GO_MODULE }}/cmd.version={{.Version}} -X {{ .Env.GO_MODULE }}/cmd.commit={{.FullCommit}} -X {{ .Env.GO_MODULE }}/cmd.date={{.Date}}
+
+archives:
+  - id: default
+    ids:
+      - uhkm
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- if eq .Os "darwin" }}macos
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs(\\(.+\\))?:"
+      - "^test(\\(.+\\))?:"
+      - "^ci(\\(.+\\))?:"
+      - "^chore(\\(.+\\))?:"
+      - "README"
+      - "Merge pull request"
+      - "Merge branch"
+
+dockers_v2:
+  - id: uhkm
+    ids:
+      - uhkm
+    dockerfile: Dockerfile
+    images:
+      - "ghcr.io/{{ .Env.GORELEASER_REPO_OWNER }}/{{ .ProjectName }}"
+    tags:
+      - "{{ .Version }}"
+      - "latest"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    extra_files:
+      - go.mod
+      - go.sum
+      - main.go
+      - cmd
+      - config
+      - edit
+      - format
+      - indent
+      - lint
+      - README.md
+      - LICENSE
+    annotations:
+      "index,manifest:org.opencontainers.image.title": "{{ .ProjectName }}"
+      "index,manifest:org.opencontainers.image.description": "Lint and format Ultimate Hacking Keyboard Macro (.uhkm) files"
+      "index,manifest:org.opencontainers.image.url": "https://github.com/{{ .Env.GORELEASER_REPO_OWNER }}/{{ .ProjectName }}"
+      "index,manifest:org.opencontainers.image.source": "https://github.com/{{ .Env.GORELEASER_REPO_OWNER }}/{{ .ProjectName }}"
+      "index,manifest:org.opencontainers.image.version": "{{ .Version }}"
+      "index,manifest:org.opencontainers.image.created": "{{ .Date }}"
+      "index,manifest:org.opencontainers.image.revision": "{{ .FullCommit }}"
+      "index,manifest:org.opencontainers.image.licenses": "MIT"
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: "Lint and format Ultimate Hacking Keyboard Macro (.uhkm) files"
+      org.opencontainers.image.url: "https://github.com/{{ .Env.GORELEASER_REPO_OWNER }}/{{ .ProjectName }}"
+      org.opencontainers.image.source: "https://github.com/{{ .Env.GORELEASER_REPO_OWNER }}/{{ .ProjectName }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: "MIT"
+
+release:
+  draft: false
+  prerelease: auto
+  mode: append
