@@ -1,0 +1,3 @@
+# Keep line endings as LF in the working tree on every platform.
+# Golden-file tests compare raw bytes against formatter output, which is LF.
+* text=auto eol=lf

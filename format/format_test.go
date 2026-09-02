@@ -13,6 +13,13 @@ import (
 
 func defaultCfg() config.Config { return config.Default() }
 
+// normalizeNewlines rewrites CR and CRLF to LF so golden-file comparisons
+// do not fail when Git checks out testdata with core.autocrlf=true.
+func normalizeNewlines(b []byte) []byte {
+	b = bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n"))
+	return bytes.ReplaceAll(b, []byte("\r"), []byte("\n"))
+}
+
 // TestFormatGolden runs every *.input.uhkm file through Format and
 // compares the result to the corresponding *.golden.uhkm file.
 func TestFormatGolden(t *testing.T) {
@@ -34,9 +41,33 @@ func TestFormatGolden(t *testing.T) {
 			if err != nil {
 				t.Fatalf("read golden: %v", err)
 			}
+			// Windows checkouts may rewrite testdata to CRLF; Format always emits LF.
+			expected = normalizeNewlines(expected)
 			got := format.Format(content, defaultCfg())
 			if !bytes.Equal(got, expected) {
-				t.Errorf("Format(%q):\ngot:\n%s\nwant:\n%s", filepath.Base(input), got, expected)
+				t.Errorf("Format(%q):\ngot:\n%s\nwant:\n%s\ngot (quoted): %q\nwant (quoted): %q",
+					filepath.Base(input), got, expected, got, expected)
+			}
+		})
+	}
+}
+
+func TestNormalizeNewlines(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []byte
+		want []byte
+	}{
+		{name: "lf unchanged", in: []byte("a\nb\n"), want: []byte("a\nb\n")},
+		{name: "crlf", in: []byte("a\r\nb\r\n"), want: []byte("a\nb\n")},
+		{name: "bare cr", in: []byte("a\rb\r"), want: []byte("a\nb\n")},
+		{name: "mixed", in: []byte("a\r\nb\rc\n"), want: []byte("a\nb\nc\n")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeNewlines(tt.in)
+			if !bytes.Equal(got, tt.want) {
+				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
 	}
