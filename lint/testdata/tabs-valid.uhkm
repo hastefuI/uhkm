@@ -1,8 +1,9 @@
-// @name: my-macro
-// @version: 1
+// tabs-valid.uhkm
+// @uhkm-name: my-macro
+// @uhkm-version: 1.0.0
 
-action {
-	key A
-	key B
-	delay 100
+ifDoubletap {
+	tapKey LC-c
+	tapKey LC-v
+	delayUntil 100
 }

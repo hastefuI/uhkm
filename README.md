@@ -5,7 +5,7 @@ A CLI for linting and formatting [Ultimate Hacking Keyboard](https://ultimatehac
 ## Usage
 
 ```
-uhkm check [paths...]         Run lint checks (UHKM100, UHKM200)
+uhkm check [paths...]         Run lint checks (UHKM100 to UHKM400)
 uhkm check --fix [paths...]   Run lint checks and auto-fix where possible
 uhkm format [paths...]        Format files in place
 uhkm config [paths...]        Print resolved configuration
@@ -36,10 +36,35 @@ CLI flags override file/default config for `check`, `format`, and `config`:
 
 ## Lint Rules
 
-| Code     | Description                         | Auto-fix |
-|----------|-------------------------------------|----------|
-| UHKM100  | Indentation style and width         | Yes      |
-| UHKM200  | File naming convention              | No       |
+| Code     | Level   | Description                                  | Auto-fix |
+|----------|---------|----------------------------------------------|----------|
+| UHKM100  | error   | Indentation style and width                  | Yes      |
+| UHKM200  | error   | File naming convention                       | No       |
+| UHKM201  | error   | Missing first-line filename comment          | No       |
+| UHKM300  | error   | Missing required pragma                      | No       |
+| UHKM301  | error   | Required pragma has an empty value           | No       |
+| UHKM302  | error   | Duplicate pragma key                         | No       |
+| UHKM303  | warning | Unknown pragma key                           | No       |
+| UHKM304  | warning | Pragma below the preamble (ignored by tools) | No       |
+| UHKM305  | error   | @uhkm-version is not a valid semver          | No       |
+| UHKM400  | error   | UTF-8 byte order mark                        | Yes      |
+
+Every reported issue, warning or error, makes `check` exit `1`.
+
+UHKM201 requires the first line of a file to be a comment naming the file, for
+example `// on-init.uhkm`, so the name survives when a macro is read outside its
+original file.
+
+UHKM300 to UHKM305 validate the preamble, the leading block of `// @key: value`
+pragmas at the top of a file. `@uhkm-name` and `@uhkm-version` are required, and
+`@uhkm-version` must be a semver `MAJOR.MINOR.PATCH` value. The
+[UHKM specification](https://github.com/hastefuI/uhkm-spec) documents the full
+pragma set.
+
+UHKM400 reports a UTF-8 byte order mark, which the specification forbids. The
+mark is ignored by every other rule, so a stray BOM is reported once instead of
+cascading into spurious missing-pragma errors, and `check --fix` and `format`
+both remove it.
 
 ## Exit Codes
 

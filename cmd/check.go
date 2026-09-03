@@ -17,7 +17,8 @@ var checkCmd = &cobra.Command{
 	Short: "Run lint checks on .uhkm files",
 	Long: `Run lint checks on .uhkm files.
 
-Applies rule UHKM100 (indentation) and UHKM200 (file naming).
+Applies UHKM100 (indentation), UHKM200 to UHKM201 (file naming), UHKM300 to
+UHKM305 (preamble pragmas) and UHKM400 (file encoding).
 Defaults to the current directory when no paths are provided.
 
 Exit codes:

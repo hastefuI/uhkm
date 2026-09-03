@@ -164,3 +164,26 @@ func TestFormatStripsTrailingWhitespace(t *testing.T) {
 		}
 	}
 }
+
+// TestFormatBlankLineInsidePreamble guards a case where format and lint used to
+// disagree. A blank line between two pragmas ended format's own notion of the
+// preamble, so no blank line was inserted before the body, even though lint
+// (and the specification) treat both pragmas as part of the preamble.
+func TestFormatBlankLineInsidePreamble(t *testing.T) {
+	input := []byte("// @uhkm-name: my-macro\n\n// @uhkm-version: 1.0.0\ntapKey enter\n")
+	want := "// @uhkm-name: my-macro\n\n// @uhkm-version: 1.0.0\n\ntapKey enter\n"
+	if got := string(format.Format(input, defaultCfg())); got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestFormatStripsBOM(t *testing.T) {
+	input := []byte("\ufeff// @uhkm-name: my-macro\n\ntapKey enter\n")
+	got := format.Format(input, defaultCfg())
+	if bytes.HasPrefix(got, []byte("\ufeff")) {
+		t.Errorf("byte order mark not removed: %q", got)
+	}
+	if want := "// @uhkm-name: my-macro\n\ntapKey enter\n"; string(got) != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}

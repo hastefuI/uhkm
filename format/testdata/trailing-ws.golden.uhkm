@@ -1,6 +1,8 @@
-// @name: trim-test
+// trailing-ws.uhkm
+// @uhkm-name: trim-test
+// @uhkm-version: 1.0.0
 
-action {
-    key A
-    key B
+ifDoubletap {
+    tapKey LC-c
+    tapKey LC-v
 }

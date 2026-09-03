@@ -9,6 +9,11 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// validPreamble is a spec-conformant header for the "macro.uhkm" fixtures, so
+// that CLI tests exercise the behavior under test rather than tripping the
+// filename-comment or required-pragma rules.
+const validPreamble = "// macro.uhkm\n// @uhkm-name: macro\n// @uhkm-version: 1.0.0\n\n"
+
 func resetCommandState() {
 	fixFlag = false
 	overrideIndentStyle = ""
@@ -50,7 +55,7 @@ func executeWithArgs(args ...string) error {
 func TestCheckFixAppliesFormatting(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "macro.uhkm")
-	if err := os.WriteFile(file, []byte("action {\n\tkey A\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(file, []byte(validPreamble+"action {\n\tkey A\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -62,7 +67,7 @@ func TestCheckFixAppliesFormatting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "action {\n    key A\n}\n"
+	want := validPreamble + "action {\n    key A\n}\n"
 	if string(got) != want {
 		t.Fatalf("got %q, want %q", got, want)
 	}
@@ -71,7 +76,7 @@ func TestCheckFixAppliesFormatting(t *testing.T) {
 func TestCheckReturnsLintFailure(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "macro.uhkm")
-	if err := os.WriteFile(file, []byte("action {\n\tkey A\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(file, []byte(validPreamble+"action {\n\tkey A\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -91,7 +96,7 @@ style = "tabs"
 	}
 
 	file := filepath.Join(dir, "macro.uhkm")
-	if err := os.WriteFile(file, []byte("action {\n\tkey A\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(file, []byte(validPreamble+"action {\n\tkey A\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

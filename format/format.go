@@ -3,18 +3,17 @@ package format
 
 import (
 	"bytes"
-	"regexp"
 	"strings"
 
 	"github.com/hastefuI/uhkm/config"
 	"github.com/hastefuI/uhkm/indent"
+	"github.com/hastefuI/uhkm/preamble"
 )
-
-var rePragma = regexp.MustCompile(`^//\s*@(\w+)\s*:\s*(.+?)\s*$`)
 
 // Format applies canonical formatting to content and returns the result.
 //
 // Canonical form:
+//   - A leading UTF-8 byte order mark is removed.
 //   - Pragmas are normalized to "// @key: value".
 //   - Trailing whitespace is stripped from every line.
 //   - CRLF line endings are converted to LF.
@@ -22,7 +21,7 @@ var rePragma = regexp.MustCompile(`^//\s*@(\w+)\s*:\s*(.+?)\s*$`)
 //   - The file ends with exactly one newline.
 //   - Indentation is normalized to the configured style.
 func Format(content []byte, cfg config.Config) []byte {
-	lines := strings.Split(string(content), "\n")
+	lines := strings.Split(string(preamble.TrimBOM(content)), "\n")
 
 	// Normalize CRLF → LF.
 	for i, l := range lines {
@@ -37,8 +36,8 @@ func Format(content []byte, cfg config.Config) []byte {
 	out := make([]string, 0, len(lines))
 	for _, line := range lines {
 		line = strings.TrimRight(line, " \t") // strip trailing whitespace
-		if m := rePragma.FindStringSubmatch(line); m != nil {
-			line = "// @" + m[1] + ": " + m[2] // canonicalize pragma
+		if canonical, ok := preamble.Canonical(line); ok {
+			line = canonical // canonicalize pragma
 		}
 		out = append(out, line)
 	}
@@ -61,36 +60,35 @@ func normalizeIndentation(lines []string, cfg config.Config) []string {
 }
 
 // separatePreambleBody ensures exactly one blank line between the preamble
-// and the body. The preamble is the initial contiguous block of comment lines
-// (lines starting with "//") at the top of the file. Body comments that
-// appear after the first non-comment line are not part of the preamble.
+// and the body.
+//
+// The preamble ends at the last pragma inside the region that the preamble
+// package identifies, not at the end of that region: a plain comment trailing
+// the pragmas introduces the body (for example a comment documenting the first
+// statement), so it stays attached to what follows. A file with no pragma has
+// no preamble to separate.
 func separatePreambleBody(lines []string) []string {
-	// Walk from the top: the preamble ends at the last consecutive "//" line
-	// before any non-comment line is encountered.
-	preambleEnd := -1
-	for i, l := range lines {
-		if strings.HasPrefix(l, "//") {
-			preambleEnd = i
-		} else {
-			break
+	end := -1
+	for _, p := range preamble.ParseLines(lines) {
+		if p.InPreamble {
+			end = p.Line - 1 // Pragma.Line is 1-based
 		}
 	}
-	if preambleEnd < 0 || preambleEnd >= len(lines)-1 {
+	if end < 0 {
 		return lines
 	}
 
-	// Collect the body: skip blank lines immediately after the preamble.
-	rest := lines[preambleEnd+1:]
-	for len(rest) > 0 && strings.TrimSpace(rest[0]) == "" {
-		rest = rest[1:]
+	head, body := lines[:end+1], lines[end+1:]
+	for len(body) > 0 && strings.TrimSpace(body[0]) == "" {
+		body = body[1:]
 	}
-	if len(rest) == 0 {
-		return lines[:preambleEnd+1]
+	if len(body) == 0 {
+		return head
 	}
 
-	out := make([]string, 0, preambleEnd+2+len(rest))
-	out = append(out, lines[:preambleEnd+1]...)
+	out := make([]string, 0, len(head)+1+len(body))
+	out = append(out, head...)
 	out = append(out, "") // exactly one blank line
-	out = append(out, rest...)
+	out = append(out, body...)
 	return out
 }

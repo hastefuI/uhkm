@@ -10,14 +10,36 @@ import (
 
 	"github.com/hastefuI/uhkm/config"
 	"github.com/hastefuI/uhkm/indent"
+	"github.com/hastefuI/uhkm/preamble"
 )
+
+// Severity classifies how serious an issue is. The zero value is
+// SeverityError, so a rule opts in to warning level explicitly.
+type Severity int
+
+const (
+	// SeverityError marks a violation of a hard specification requirement.
+	SeverityError Severity = iota
+	// SeverityWarning marks a violation that tooling can still work around,
+	// such as a pragma key the specification does not define.
+	SeverityWarning
+)
+
+// String returns the lowercase name of the severity.
+func (s Severity) String() string {
+	if s == SeverityWarning {
+		return "warning"
+	}
+	return "error"
+}
 
 // Issue represents a single lint violation.
 type Issue struct {
-	Code    string
-	File    string
-	Line    int // 1-based; 0 means file-level
-	Message string
+	Code     string
+	Severity Severity
+	File     string
+	Line     int // 1-based; 0 means file-level
+	Message  string
 }
 
 func (i Issue) String() string {
@@ -28,10 +50,21 @@ func (i Issue) String() string {
 }
 
 // Check runs all lint rules against path with the given content and config.
+// Rules are reported in code order: UHKM100 (indentation), UHKM200-UHKM201
+// (file naming), UHKM300-UHKM305 (preamble and pragmas), then UHKM400
+// (encoding).
 func Check(path string, content []byte, cfg config.Config) []Issue {
+	// A byte order mark is reported once, by UHKM400. Every other rule sees the
+	// file as the specification says it should have been written, so that a BOM
+	// cannot cascade into misleading "missing pragma" errors.
+	body := preamble.TrimBOM(content)
+
 	var issues []Issue
-	issues = append(issues, checkUHKM100(path, content, cfg)...)
+	issues = append(issues, checkUHKM100(path, body, cfg)...)
 	issues = append(issues, checkUHKM200(path, cfg)...)
+	issues = append(issues, checkUHKM201(path, body)...)
+	issues = append(issues, checkPragmas(path, body)...)
+	issues = append(issues, checkUHKM400(path, content)...)
 	return issues
 }
 
@@ -39,9 +72,9 @@ func Check(path string, content []byte, cfg config.Config) []Issue {
 // Returns the (possibly modified) content and whether any change was made.
 // Non-fixable issues (e.g. UHKM200) are left for the user to resolve.
 func Fix(content []byte, cfg config.Config) ([]byte, bool) {
-	fixed, ok := fixUHKM100(content, cfg)
-	if !ok {
-		return content, false
+	fixed := preamble.TrimBOM(content) // UHKM400
+	if indented, ok := fixUHKM100(fixed, cfg); ok {
+		fixed = indented
 	}
 	return fixed, !bytes.Equal(content, fixed)
 }
@@ -61,26 +94,29 @@ func checkUHKM100(path string, content []byte, cfg config.Config) []Issue {
 		case "spaces":
 			if strings.ContainsRune(leading, '\t') {
 				issues = append(issues, Issue{
-					Code:    "UHKM100",
-					File:    path,
-					Line:    lineNum,
-					Message: "tabs found; expected spaces",
+					Code:     "UHKM100",
+					Severity: SeverityError,
+					File:     path,
+					Line:     lineNum,
+					Message:  "tabs found; expected spaces",
 				})
 			} else if w := cfg.Lint.Indentation.Width; w > 0 && len(leading)%w != 0 {
 				issues = append(issues, Issue{
-					Code:    "UHKM100",
-					File:    path,
-					Line:    lineNum,
-					Message: fmt.Sprintf("indentation %d is not a multiple of %d", len(leading), w),
+					Code:     "UHKM100",
+					Severity: SeverityError,
+					File:     path,
+					Line:     lineNum,
+					Message:  fmt.Sprintf("indentation %d is not a multiple of %d", len(leading), w),
 				})
 			}
 		case "tabs":
 			if strings.ContainsRune(leading, ' ') {
 				issues = append(issues, Issue{
-					Code:    "UHKM100",
-					File:    path,
-					Line:    lineNum,
-					Message: "spaces found; expected tabs",
+					Code:     "UHKM100",
+					Severity: SeverityError,
+					File:     path,
+					Line:     lineNum,
+					Message:  "spaces found; expected tabs",
 				})
 			}
 		}
@@ -122,9 +158,10 @@ func checkUHKM200(path string, cfg config.Config) []Issue {
 	}
 	if !ok {
 		return []Issue{{
-			Code:    "UHKM200",
-			File:    path,
-			Message: fmt.Sprintf("filename %q does not match %q convention", base, cfg.Lint.Naming.Convention),
+			Code:     "UHKM200",
+			Severity: SeverityError,
+			File:     path,
+			Message:  fmt.Sprintf("filename %q does not match %q convention", base, cfg.Lint.Naming.Convention),
 		}}
 	}
 	return nil
@@ -138,4 +175,46 @@ func leadingWhitespace(s string) string {
 		}
 	}
 	return s
+}
+
+// --- UHKM201: Filename comment ---
+
+// checkUHKM201 reports a missing first-line filename comment. The
+// specification requires the first line of a .uhkm file to be a comment
+// containing the filename, so that the name survives when a macro is viewed
+// outside its original file. A pragma does not satisfy the rule: the filename
+// comment precedes the preamble.
+func checkUHKM201(path string, content []byte) []Issue {
+	base := filepath.Base(path)
+	first, _, _ := strings.Cut(string(content), "\n")
+	first = strings.TrimSpace(first)
+
+	if _, _, isPragma := preamble.ParseLine(first); !isPragma &&
+		strings.HasPrefix(first, "//") && strings.Contains(first, base) {
+		return nil
+	}
+	return []Issue{{
+		Code:     "UHKM201",
+		Severity: SeverityError,
+		File:     path,
+		Line:     1,
+		Message:  fmt.Sprintf("first line must be a comment containing the filename %q", base),
+	}}
+}
+
+// --- UHKM400: File encoding ---
+
+// checkUHKM400 reports a leading UTF-8 byte order mark. The specification
+// requires .uhkm files to be UTF-8 encoded with no BOM.
+func checkUHKM400(path string, content []byte) []Issue {
+	if !preamble.HasBOM(content) {
+		return nil
+	}
+	return []Issue{{
+		Code:     "UHKM400",
+		Severity: SeverityError,
+		File:     path,
+		Line:     1,
+		Message:  "file begins with a UTF-8 byte order mark; .uhkm files must be UTF-8 with no BOM",
+	}}
 }
