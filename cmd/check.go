@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/edit"
-	"github.com/hastefuI/uhkm/lint"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/edit"
+	"go.hasteful.org/uhkm/lint"
 )
 
 var fixFlag bool

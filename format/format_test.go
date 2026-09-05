@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/format"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/format"
 )
 
 func defaultCfg() config.Config { return config.Default() }

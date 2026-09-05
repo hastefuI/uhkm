@@ -4,7 +4,7 @@ package indent
 import (
 	"strings"
 
-	"github.com/hastefuI/uhkm/config"
+	"go.hasteful.org/uhkm/config"
 )
 
 // Mode controls how unfixable indentation is handled.

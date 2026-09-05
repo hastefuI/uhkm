@@ -1,4 +1,4 @@
-module github.com/hastefuI/uhkm
+module go.hasteful.org/uhkm
 
 go 1.27
 

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hastefuI/uhkm/edit"
+	"go.hasteful.org/uhkm/edit"
 )
 
 func TestWriteCreatesFile(t *testing.T) {

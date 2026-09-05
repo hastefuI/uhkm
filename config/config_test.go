@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hastefuI/uhkm/config"
+	"go.hasteful.org/uhkm/config"
 )
 
 func TestDefault(t *testing.T) {

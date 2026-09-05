@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hastefuI/uhkm/cmd"
+	"go.hasteful.org/uhkm/cmd"
 )
 
 func main() {

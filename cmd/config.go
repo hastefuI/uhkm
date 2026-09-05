@@ -7,7 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
 
-	"github.com/hastefuI/uhkm/config"
+	"go.hasteful.org/uhkm/config"
 )
 
 var configCmd = &cobra.Command{

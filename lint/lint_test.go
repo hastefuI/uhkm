@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/lint"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/lint"
 )
 
 // --- UHKM100 ---

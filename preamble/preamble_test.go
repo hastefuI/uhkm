@@ -3,7 +3,7 @@ package preamble_test
 import (
 	"testing"
 
-	"github.com/hastefuI/uhkm/preamble"
+	"go.hasteful.org/uhkm/preamble"
 )
 
 func TestParseLine(t *testing.T) {

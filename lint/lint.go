@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/indent"
-	"github.com/hastefuI/uhkm/preamble"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/indent"
+	"go.hasteful.org/uhkm/preamble"
 )
 
 // Severity classifies how serious an issue is. The zero value is

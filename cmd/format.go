@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/edit"
-	"github.com/hastefuI/uhkm/format"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/edit"
+	"go.hasteful.org/uhkm/format"
 )
 
 var formatCmd = &cobra.Command{

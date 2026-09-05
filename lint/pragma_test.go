@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/lint"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/lint"
 )
 
 const validPreamble = "// @uhkm-name: my-macro\n// @uhkm-version: 1.0.0\n"

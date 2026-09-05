@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/hastefuI/uhkm/config"
-	"github.com/hastefuI/uhkm/indent"
-	"github.com/hastefuI/uhkm/preamble"
+	"go.hasteful.org/uhkm/config"
+	"go.hasteful.org/uhkm/indent"
+	"go.hasteful.org/uhkm/preamble"
 )
 
 // Format applies canonical formatting to content and returns the result.

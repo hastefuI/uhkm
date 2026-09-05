@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hastefuI/uhkm/config"
+	"go.hasteful.org/uhkm/config"
 )
 
 func forEachResolvedFile(command *cobra.Command, paths []string, visit func(path string, cfg config.Config, content []byte) error) error {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/hastefuI/uhkm/preamble"
+	"go.hasteful.org/uhkm/preamble"
 )
 
 // requiredPragmas are the pragma keys every published .uhkm file must define.
