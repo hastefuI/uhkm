@@ -83,8 +83,7 @@ dockers_v2:
       - format
       - indent
       - lint
-      - README.md
-      - LICENSE
+      - preamble
     annotations:
       "index,manifest:org.opencontainers.image.title": "{{ .ProjectName }}"
       "index,manifest:org.opencontainers.image.description": "Lint and format Ultimate Hacking Keyboard Macro (.uhkm) files"
